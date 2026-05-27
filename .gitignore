@@ -1,6 +1,8 @@
-/.vscode
-/.cursor
+.vscode/
+.cursor/
+Cargo.lock
 /target
+
 **/*rs.bk
 
 # Legacy C++ prototype — kept locally for reference during the Rust port,
