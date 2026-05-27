@@ -1,4 +1,2 @@
-build/
-chain.json
-.vscode/
-.cursor/
+/target
+**/*rs.bk
