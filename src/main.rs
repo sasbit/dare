@@ -26,6 +26,12 @@ async fn main() {
         bc.fund_address(alice.clone(), String::from("USDC"), 1_000_000);
     }
 
+    {
+        let mut bc = chain2.lock().await;
+        bc.register_key(alice.clone(), alice_wallet.public_key());
+        bc.fund_address(alice.clone(), String::from("USDC"), 1_000_000);
+    }    
+
     //spinning up nodes
     let node1 = Arc::new(Node::new(String::from("127.0.0.1:8001"), Arc::clone(&chain1)));
     let node2 = Arc::new(Node::new(String::from("127.0.0.1:8002"), Arc::clone(&chain2)));
