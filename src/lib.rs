@@ -4,3 +4,5 @@ pub mod merkle;
 pub mod wallet;
 pub mod blockchain;
 pub mod persistence;
+pub mod network;
+pub mod message;

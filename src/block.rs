@@ -1,9 +1,10 @@
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
-
-
+use serde::{Serialize, Deserialize};
 use crate::merkle::compute_merkle_root;
 use crate::transaction::Transaction;
+
+#[derive(Serialize, Deserialize, Clone)]
 
 
 pub struct Block {

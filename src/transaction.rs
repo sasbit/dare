@@ -1,7 +1,10 @@
 use sha2::{Digest, Sha256};
+use serde::{Serialize, Deserialize};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use crate::wallet::Wallet;
 use std::convert::TryInto;
+
+#[derive(Serialize, Deserialize,Clone)]
 
 
 
