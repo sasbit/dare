@@ -77,18 +77,12 @@ impl Blockchain {
 
     pub fn load_block(&mut self, index: u32, timestamp: u64, transactions: Vec<Transaction>, previous_hash: String, hash: String) {
         self.chain.push(Block::load(index, timestamp, transactions, previous_hash, hash));
-        self.rebuild_balances();
-    }
-
-    fn rebuild_balances(&mut self) {
-        self.balances.clear();
-        for block in &self.chain {
-            for tx in block.transactions() {
-                *self.balances.entry(tx.sender().to_string()).or_default()
-                    .entry(tx.currency().to_string()).or_insert(0) -= tx.amount();
-                *self.balances.entry(tx.receiver().to_string()).or_default()
-                    .entry(tx.currency().to_string()).or_insert(0) += tx.amount();
-            }
+        let block = self.chain.last().unwrap();
+        for tx in block.transactions() {
+            *self.balances.entry(tx.sender().to_string()).or_default()
+                .entry(tx.currency().to_string()).or_insert(0) -= tx.amount();
+            *self.balances.entry(tx.receiver().to_string()).or_default()
+                .entry(tx.currency().to_string()).or_insert(0) += tx.amount();
         }
     }
 
