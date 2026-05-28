@@ -58,10 +58,44 @@ impl Node {
             }
         }
     }
+
+    pub async fn sync_chain_from(&self, peer_addr: &str) {
+        let mut stream = match TcpStream::connect(peer_addr).await {
+            Ok(s) => s,
+            Err(e) => { println!("sync failed: {}", e); return; }
+        };
+
+        let request = serde_json::to_string(&Message::RequestChain).unwrap() + "\n";
+        stream.write_all(request.as_bytes()).await.unwrap();
+
+        let mut reader = BufReader::new(stream);
+        let mut line = String::new();
+        reader.read_line(&mut line).await.unwrap();
+
+        if let Ok(Message::ResponseChain(blocks)) = serde_json::from_str::<Message>(&line) {
+            let mut bc = self.blockchain.lock().await;
+            for block in &blocks {
+                if block.index() == 0 {
+                    continue;
+                }
+                bc.load_block(
+                    block.index(),
+                    block.timestamp(),
+                    block.transactions().to_vec(),
+                    block.previous_hash().to_string(),
+                    block.hash().to_string(),
+                );
+            }
+            println!("synced: {} blocks", bc.chain().len());
+        }
+
+
+    }
 }
 
 async fn handle_connection(stream: TcpStream, blockchain: Arc<Mutex<Blockchain>>, peers: Arc<Mutex<Vec<String>>>, mempool: Arc<Mutex<Vec<Transaction>>>) {
-    let reader = BufReader::new(stream);
+    let (read_half, mut write_half) = stream.into_split();
+    let reader = BufReader::new(read_half);
     let mut lines = reader.lines();
 
     while let Some(line) = lines.next_line().await.unwrap_or(None) {
@@ -91,7 +125,11 @@ async fn handle_connection(stream: TcpStream, blockchain: Arc<Mutex<Blockchain>>
                 );
             }
             Message::RequestChain => {
-                println!("chain requested");
+                let chain = blockchain.lock().await.chain().to_vec();
+                let response = Message::ResponseChain(chain);
+                let line = serde_json::to_string(&response).unwrap() + "\n";
+                let _ = write_half.write_all(line.as_bytes()).await;
+                println!("sent chain ({} blocks) to peer", blockchain.lock().await.chain().len());
             }
             Message::ResponseChain(_) => {
                 println!("chain received");

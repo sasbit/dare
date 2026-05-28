@@ -58,4 +58,27 @@ async fn main() {
     
     tokio::time::sleep(Duration::from_millis(100)).await;
     println!("done");
+
+    // node3 joins late and syncs from node1
+    let chain3 = Arc::new(Mutex::new(Blockchain::new()));
+    {
+        let mut bc = chain3.lock().await;
+        bc.register_key(alice.clone(), alice_wallet.public_key());
+        bc.fund_address(alice.clone(), String::from("USDC"), 1_000_000);
+    }
+
+    let node3 = Arc::new(Node::new(String::from("127.0.0.1:8003"), Arc::clone(&chain3)));
+    let node3_ref = Arc::clone(&node3);
+    tokio::spawn(async move { node3_ref.listen().await });
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    println!("node3 syncing from node1...");
+    node3.sync_chain_from("127.0.0.1:8001").await;
+
+    println!(
+        "node3 chain length: {}, valid: {}",
+        chain3.lock().await.chain().len(),
+        chain3.lock().await.is_valid()
+    );
+    
 }
