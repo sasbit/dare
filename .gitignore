@@ -8,3 +8,7 @@ Cargo.lock
 # Legacy C++ prototype — kept locally for reference during the Rust port,
 # but should not be pushed to the remote.
 C++_legacy_work/
+
+mock-buidl/
+repo-cli/
+rust_specs.md
